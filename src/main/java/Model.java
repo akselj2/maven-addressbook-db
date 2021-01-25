@@ -72,8 +72,20 @@ public class Model {
         }
     }
 
-    public void showItems(){
+    public void edit(String selectedName, String name, String street, int plz){
+        String sql = "UPDATE addresses SET name = ?, street = ?, plz = ? WHERE name = ?";
 
+        try (Connection myConn = this.connect();
+             PreparedStatement pstmt = myConn.prepareStatement(sql)) {
+            pstmt.setString(1, name);
+            pstmt.setString(2, street);
+            pstmt.setInt(3, plz);
+            pstmt.setString(4, selectedName);
+            pstmt.executeUpdate();
+
+        } catch(SQLException e){
+            e.printStackTrace();
+        }
     }
 
     // connects to database with username and password
@@ -89,10 +101,6 @@ public class Model {
         }
 
         return myConn;
-    }
-
-    public void showItemsInListView(){
-
     }
 
     // getters and setters
