@@ -57,7 +57,7 @@ public class Controller {
         }
     }
 
-    // test est i eat ass test teast
+    // checks if all textFields are empty. if false, it updates all items.
 
     public void edit() {
         if (checkInputFields()){
