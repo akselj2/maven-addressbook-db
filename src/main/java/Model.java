@@ -1,25 +1,32 @@
 import javafx.beans.property.*;
 import javafx.collections.ObservableList;
+import org.mindrot.jbcrypt.BCrypt;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.sql.*;
 
 /**
  * Model
  *
  * @author Aksel Jessen
  * @version 09/01/2021
+ *
+ * I attempted to seperate Models so that each Scene had its own. JavaFX doesn't like that. Next thing i tried is to centralize everything. 1 Model, 1 Controller for all Views.
+ * Didn't work either. So, i went with 1 Model for all Views but each View has it's own Controller.
+ * That works. I love myself.
  */
 
 public class Model {
 
     //variables for AddController.java
+    public static int workload = 12;
 
-    private StringProperty name = new SimpleStringProperty();
-    private StringProperty street = new SimpleStringProperty();
-    private IntegerProperty plz = new SimpleIntegerProperty();
+    private StringProperty noteContent = new SimpleStringProperty();
+
+    private StringProperty noteTitle = new SimpleStringProperty();
+    private StringProperty firstname = new SimpleStringProperty();
+    private StringProperty lastname = new SimpleStringProperty();
+    private StringProperty email = new SimpleStringProperty();
+    private StringProperty password = new SimpleStringProperty();
 
     private ObservableList<String> names = new SimpleListProperty<>();
 
@@ -32,17 +39,94 @@ public class Model {
     then calls the insert method with the params in a try catch
      */
 
-    public void insertFromView(){
 
-        String name = getName();
-        String street = getStreet();
-        int plz = getPlz();
+    public void register() {
+        String firstname = getFirstname();
+        String lastname = getLastname();
+        String email = getEmail();
+        String password = getPassword();
+
+        String username = new StringBuilder().append(firstname).append(".").append(lastname).toString();
+
+        String salt = BCrypt.gensalt(workload);
+
+        String hashedPassword = BCrypt.hashpw(password, salt);
 
         try {
-            insert(name, street, plz);
-        } catch (Exception e){
+            insertRegister(username, firstname, lastname, email, hashedPassword);
+        } catch(Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public void insertRegister(String username, String firstname, String lastname, String email, String password) {
+        String sql = "INSERT INTO users(username, firstname, lastname, email, password) VALUES(?,?,?,?,?)";
+
+        try (Connection myConn = this.connect();
+        PreparedStatement pstmt = myConn.prepareStatement(sql)) {
+            pstmt.setString(1, username);
+            pstmt.setString(2, firstname);
+            pstmt.setString(3, lastname);
+            pstmt.setString(4, email);
+            pstmt.setString(5, password);
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void insertFromView() {
+
+        String firstname = getFirstname();
+        String lastname = getLastname();
+        String email = getEmail();
+        String username = new StringBuilder().append(firstname).append(".").append(lastname).toString();
+
+        try {
+            insert(username, firstname, lastname, email);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public boolean verifyUser(String email, String password) {
+        boolean is_user_verified = false;
+
+        String email2 = email;
+        String password2 = password;
+        String sql = "SELECT password FROM users WHERE (email = ?)";
+        String hash = new String();
+
+        try (Connection myConn = this.connect();
+        PreparedStatement pstmt = myConn.prepareStatement(sql)){
+
+            pstmt.setString(1, email2);
+
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                hash = rs.getString("password");
+            }
+
+            if( verifyPassword(password2, hash) ) {
+                is_user_verified = true;
+            }
+
+        } catch(SQLException e) {
+            e.printStackTrace();
+        }
+
+        return is_user_verified;
+    }
+
+    public static boolean verifyPassword(String password, String hash) {
+        boolean password_verified = false;
+
+        if(null == hash || !hash.startsWith("$2a$")) throw new java.lang.IllegalArgumentException("Invalid hash provided for verification");
+
+        password_verified = BCrypt.checkpw(password, hash);
+
+        return password_verified;
     }
 
     /**
@@ -51,20 +135,22 @@ public class Model {
      *
      * bindings sql style.
      *
-     * @param name      String variable for name in address
-     * @param street    String variable for street in address
-     * @param plz       integer for zip code in address
+     * @param username    String variable consisting of the firstname and lastname. unique?
+     * @param firstname   String variable for firstnames
+     * @param lastname    String variable for lastnames
+     * @param email       string variable for emails
      */
 
-    public void insert(String name, String street, int plz){
+    public void insert(String username, String firstname, String lastname, String email){
 
-        String sql = "INSERT INTO addresses(name,street,plz) VALUES(?,?,?)";
+        String sql = "INSERT INTO users(username, firstname,lastname,email) VALUES(?,?,?,?)";
 
         try (Connection myConn = this.connect();
              PreparedStatement pstmt = myConn.prepareStatement(sql)) {
-            pstmt.setString(1, name);
-            pstmt.setString(2, street);
-            pstmt.setInt(3, plz);
+            pstmt.setString(1, username);
+            pstmt.setString(2, firstname);
+            pstmt.setString(3, lastname);
+            pstmt.setString(4, email);
             pstmt.executeUpdate();
 
         } catch(SQLException e){
@@ -72,8 +158,8 @@ public class Model {
         }
     }
 
-    public void edit(String selectedName, String name, String street, int plz){
-        String sql = "UPDATE addresses SET name = ?, street = ?, plz = ? WHERE name = ?";
+    /*public void edit(String selectedName, String name, String street, int plz){
+        String sql = "UPDATE users SET name = ?, street = ?, plz = ? WHERE name = ?";
 
         try (Connection myConn = this.connect();
              PreparedStatement pstmt = myConn.prepareStatement(sql)) {
@@ -86,7 +172,7 @@ public class Model {
         } catch(SQLException e){
             e.printStackTrace();
         }
-    }
+    }*/
 
     // connects to database with username and password
 
@@ -95,7 +181,7 @@ public class Model {
         Connection myConn = null;
 
         try {
-            myConn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/addressbook?user=root&password=aksel");
+            myConn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/probeIPA?user=root&password=aksel");
         } catch (SQLException e){
             e.printStackTrace();
         }
@@ -105,39 +191,76 @@ public class Model {
 
     // getters and setters
 
-    public String getName() {
-        return name.get();
+
+    public String getFirstname() {
+        return firstname.get();
     }
 
-    public StringProperty nameProperty() {
-        return name;
+    public StringProperty firstnameProperty() {
+        return firstname;
     }
 
-    public void setName(String name) {
-        this.name.set(name);
+    public void setFirstname(String firstname) {
+        this.firstname.set(firstname);
     }
 
-    public String getStreet() {
-        return street.get();
+    public String getLastname() {
+        return lastname.get();
     }
 
-    public StringProperty streetProperty() {
-        return street;
+    public StringProperty lastnameProperty() {
+        return lastname;
     }
 
-    public void setStreet(String street) {
-        this.street.set(street);
+    public void setLastname(String lastname) {
+        this.lastname.set(lastname);
     }
 
-    public int getPlz() {
-        return plz.get();
+    public String getEmail() {
+        return email.get();
     }
 
-    public IntegerProperty plzProperty() {
-        return plz;
+    public StringProperty emailProperty() {
+        return email;
     }
 
-    public void setPlz(int plz) {
-        this.plz.set(plz);
+    public void setEmail(String email) {
+        this.email.set(email);
+    }
+
+    public String getPassword() {
+        return password.get();
+    }
+
+    public StringProperty passwordProperty() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password.set(password);
+    }
+
+    public String getNoteContent() {
+        return noteContent.get();
+    }
+
+    public StringProperty noteContentProperty() {
+        return noteContent;
+    }
+
+    public void setNoteContent(String noteContent) {
+        this.noteContent.set(noteContent);
+    }
+
+    public String getNoteTitle() {
+        return noteTitle.get();
+    }
+
+    public StringProperty noteTitleProperty() {
+        return noteTitle;
+    }
+
+    public void setNoteTitle(String noteTitle) {
+        this.noteTitle.set(noteTitle);
     }
 }

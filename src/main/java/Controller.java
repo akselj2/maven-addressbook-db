@@ -12,16 +12,16 @@ public class Controller {
     Model myModel;
 
     @FXML
-    TextField textFieldName;
+    TextField textFieldTitle;
 
     @FXML
-    TextField textFieldStreet;
+    TextField textFieldContent;
 
     @FXML
-    TextField textFieldPlz;
-
+    ObservableList<String> notes = FXCollections.observableArrayList();
+    
     @FXML
-    ObservableList<String> names = FXCollections.observableArrayList();
+    ObservableList<String> noteTitles = FXCollections.observableArrayList();
 
     @FXML
     ListView<String> databaseListView = new ListView<>();
@@ -31,67 +31,63 @@ public class Controller {
     public void setModel(Model model) {
         myModel = model;
 
-        textFieldName.textProperty().bindBidirectional(model.nameProperty());
-        textFieldStreet.textProperty().bindBidirectional(model.streetProperty());
-        textFieldPlz.textProperty().bindBidirectional(model.plzProperty(), new NumberStringConverter());
+        textFieldTitle.textProperty().bindBidirectional(model.noteTitleProperty());
+        textFieldContent.textProperty().bindBidirectional(model.noteContentProperty());
         showItems();
 
-        databaseListView.setItems(names);
+        databaseListView.setItems(noteTitles);
     }
 
     // sets all fields to blank
 
-    public void clear(ActionEvent event) {
-        textFieldName.setText("");
-        textFieldStreet.setText("");
-        textFieldPlz.setText("");
+    public void clear() {
+        textFieldTitle.setText("");
+        textFieldContent.setText("");
     }
 
     // once button is clicked, method calls insertFromView() from Model class and sets Text for a Label to "Check Db" and makes it Green.
 
-    public void add(ActionEvent event) {
+    public void add() {
         if (checkInputFields()){
             myModel.insertFromView();
-
             showItems();
         }
     }
 
     // checks if all textFields are empty. if false, it updates all items.
 
-    public void edit() {
+    /*public void edit() {
         if (checkInputFields()){
             String name = textFieldName.getText();
             String street = textFieldStreet.getText();
             int plz = Integer.parseInt(textFieldPlz.getText());
             String selectedName = databaseListView.getSelectionModel().getSelectedItem();
 
-            /**
+
              * selectedName is 1st
              * name is second
              * street is third
              * plz is fourth.
-             */
+
 
             myModel.edit(selectedName, name, street, plz);
 
             showItems();
         }
-    }
+    }*/
 
     public boolean checkInputFields() {
-        return (!textFieldName.getText().isEmpty()
-                && !textFieldStreet.getText().isEmpty()
-                && !textFieldPlz.getText().isEmpty());
+        return (!textFieldTitle.getText().isEmpty()
+                && !textFieldContent.getText().isEmpty());
     }
 
     public void delete() {
         delete(databaseListView.getSelectionModel().getSelectedItem());
     }
 
-    public void delete(String name) {
+    /*public void delete(String name) {
 
-        String sql = "DELETE FROM addresses WHERE name='" + name + "'";
+        String sql = "DELETE FROM notes WHERE name='" + name + "'";
 
         Connection myConn = connect();
 
@@ -103,10 +99,14 @@ public class Controller {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }*/
+
+    public void changeView() {
+
     }
 
     public void showItems() {
-        String sql = "SELECT name FROM addresses";
+        String sql = "SELECT username FROM users";
 
         Connection myConn = connect();
 
@@ -118,7 +118,7 @@ public class Controller {
             names.clear();
 
             while (rs.next()) {
-                String name = rs.getString("name");
+                String name = rs.getString("username");
                 names.add(name);
             }
         } catch (SQLException e) {
@@ -130,7 +130,7 @@ public class Controller {
         Connection myConn = null;
 
         try {
-            myConn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/addressbook?user=root&password=aksel");
+            myConn = DriverManager.getConnection("jdbc:mariadb://localhost:3306/probeIPA?user=root&password=aksel");
         } catch (SQLException e) {
             e.printStackTrace();
         }

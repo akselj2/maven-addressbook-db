@@ -1,4 +1,5 @@
 import javafx.application.Application;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.scene.layout.HBox;
@@ -20,18 +21,17 @@ public class Main extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-
         try {
-            FXMLLoader myLoader = new FXMLLoader(getClass().getResource("MenuView.fxml"));
+            FXMLLoader myLoader = new FXMLLoader(getClass().getResource("LoginView.fxml"));
             HBox root = myLoader.load();
 
             Model myModel = new Model();
 
-            Controller controller = myLoader.getController();
+            LoginController controller = myLoader.getController();
             controller.setModel(myModel);
 
             Scene scene = new Scene(root);
-            primaryStage.setTitle("AddressBook");
+            primaryStage.setTitle("PROBEIPA");
             primaryStage.setScene(scene);
             primaryStage.show();
         } catch (IOException e) {
