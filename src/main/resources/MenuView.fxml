@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -13,7 +14,7 @@
 
 <HBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Controller">
    <children>
-      <ListView fx:id="databaseListView" prefHeight="600.0" prefWidth="300.0">
+      <ListView fx:id="databaseListView" onMouseClicked="#showNote" prefHeight="600.0" prefWidth="300.0">
          <HBox.margin>
             <Insets bottom="20.0" left="20.0" top="20.0" />
          </HBox.margin>
@@ -41,7 +42,6 @@
             <TextField fx:id="textFieldTitle" GridPane.columnIndex="1" GridPane.rowIndex="1" />
             <Label prefHeight="17.0" prefWidth="81.0" text="Title" GridPane.rowIndex="1" />
             <Label prefHeight="17.0" prefWidth="76.0" text="Content" GridPane.rowIndex="2" />
-            <TextField fx:id="textFieldContent" prefHeight="119.0" prefWidth="189.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
             <!--<Button mnemonicParsing="false" onAction="#edit" prefHeight="25.0" prefWidth="75.0" text="Edit" GridPane.columnIndex="1" GridPane.rowIndex="3">
                <GridPane.margin>
                   <Insets left="15.0" />
@@ -58,6 +58,7 @@
                   <Insets left="100.0" />
                </GridPane.margin>
             </Button>
+            <TextArea fx:id="textFieldContent" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
          </children>
          <HBox.margin>
             <Insets right="15.0" />

@@ -75,15 +75,13 @@ public class Model {
         }
     }
 
-    public void insertFromView() {
+    public void insertNote() {
 
-        String firstname = getFirstname();
-        String lastname = getLastname();
-        String email = getEmail();
-        String username = new StringBuilder().append(firstname).append(".").append(lastname).toString();
+        String title = getNoteTitle();
+        String content = getNoteContent();
 
         try {
-            insert(username, firstname, lastname, email);
+            insert(title, content);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -135,22 +133,18 @@ public class Model {
      *
      * bindings sql style.
      *
-     * @param username    String variable consisting of the firstname and lastname. unique?
-     * @param firstname   String variable for firstnames
-     * @param lastname    String variable for lastnames
-     * @param email       string variable for emails
+     * @param title    String variable consisting of the firstname and lastname. unique?
+     * @param content   String variable for firstnames
      */
 
-    public void insert(String username, String firstname, String lastname, String email){
+    public void insert(String title, String content){
 
-        String sql = "INSERT INTO users(username, firstname,lastname,email) VALUES(?,?,?,?)";
+        String sql = "INSERT INTO notes(title, content) VALUES(?,?)";
 
         try (Connection myConn = this.connect();
              PreparedStatement pstmt = myConn.prepareStatement(sql)) {
-            pstmt.setString(1, username);
-            pstmt.setString(2, firstname);
-            pstmt.setString(3, lastname);
-            pstmt.setString(4, email);
+            pstmt.setString(1, title);
+            pstmt.setString(2, content);
             pstmt.executeUpdate();
 
         } catch(SQLException e){

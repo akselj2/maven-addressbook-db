@@ -6,6 +6,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.util.converter.NumberStringConverter;
 
+import javax.xml.transform.Result;
 import java.sql.*;
 
 public class Controller {
@@ -16,12 +17,11 @@ public class Controller {
 
     @FXML
     TextField textFieldContent;
-
-    @FXML
-    ObservableList<String> notes = FXCollections.observableArrayList();
     
     @FXML
     ObservableList<String> noteTitles = FXCollections.observableArrayList();
+
+    String noteContent = new String();
 
     @FXML
     ListView<String> databaseListView = new ListView<>();
@@ -49,7 +49,7 @@ public class Controller {
 
     public void add() {
         if (checkInputFields()){
-            myModel.insertFromView();
+            myModel.insertNote();
             showItems();
         }
     }
@@ -81,9 +81,9 @@ public class Controller {
                 && !textFieldContent.getText().isEmpty());
     }
 
-    public void delete() {
+    /*public void delete() {
         delete(databaseListView.getSelectionModel().getSelectedItem());
-    }
+    }*/
 
     /*public void delete(String name) {
 
@@ -101,12 +101,55 @@ public class Controller {
         }
     }*/
 
-    public void changeView() {
+    public void showNote() {
+        textFieldContent.setText(retrieveContent(databaseListView.getSelectionModel().getSelectedIndex()+1));
+        textFieldTitle.setText(retrieveTitle(databaseListView.getSelectionModel().getSelectedIndex()+1));
+    }
 
+    public String retrieveContent(int id) {
+        String content;
+
+        String sql = "SELECT content FROM notes WHERE (noteID=?)";
+
+        try (Connection myConn = connect();
+             PreparedStatement pstmt = myConn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+
+            while(rs.next()) {
+                content = rs.getString("content");
+                return content;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return "Couldn't retrieve content. Check whether which index you've selected.";
+    }
+
+    public String retrieveTitle(int id) {
+        String title;
+
+        String sql = "SELECT title FROM notes WHERE (noteID=?)";
+
+        try (Connection myConn = connect();
+             PreparedStatement pstmt = myConn.prepareStatement(sql)) {
+            pstmt.setInt(1, id);
+            ResultSet rs = pstmt.executeQuery();
+
+            while(rs.next()) {
+                title = rs.getString("title");
+                return title;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return "Couldn't retrieve title. Check which index you have selected.";
     }
 
     public void showItems() {
-        String sql = "SELECT username FROM users";
+        String sql = "SELECT title FROM notes";
 
         Connection myConn = connect();
 
@@ -115,14 +158,14 @@ public class Controller {
 
             ResultSet rs = stmt.executeQuery(sql);
 
-            names.clear();
+            noteTitles.clear();
 
             while (rs.next()) {
-                String name = rs.getString("username");
-                names.add(name);
+                String title = rs.getString("title");
+                noteTitles.add(title);
             }
         } catch (SQLException e) {
-            e.getMessage();
+            e.printStackTrace();
         }
     }
 

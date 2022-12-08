@@ -55,7 +55,7 @@ public class RegisterController {
         stage.show();
 
     }
-    public boolean regexMyAss(String firstname, String lastname, String email, String password) {
+    public boolean matchPattern(String firstname, String lastname, String email, String password) {
 
         Pattern patternName = Pattern.compile("[A-Za-z]+", Pattern.CASE_INSENSITIVE);
         Pattern patternEmail = Pattern.compile("[a-zA-Z]+\\.[a-zA-Z]+@cognizant\\.com", Pattern.CASE_INSENSITIVE);
@@ -84,7 +84,7 @@ public class RegisterController {
         String email = textFieldEmail.getText();
         String password =passwordField.getText();
 
-        if (regexMyAss(firstname, lastname, email, password)
+        if (matchPattern(firstname, lastname, email, password)
                 && !textFieldName.getText().isEmpty()
                 && !textFieldLastName.getText().isEmpty()
                 && !textFieldEmail.getText().isEmpty()
