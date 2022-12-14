@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
@@ -41,12 +42,11 @@
             <TextField fx:id="textFieldTitle" GridPane.columnIndex="1" GridPane.rowIndex="1" />
             <Label prefHeight="17.0" prefWidth="81.0" text="Title" GridPane.rowIndex="1" />
             <Label prefHeight="17.0" prefWidth="76.0" text="Content" GridPane.rowIndex="2" />
-            <TextField fx:id="textFieldContent" prefHeight="119.0" prefWidth="189.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-            <!--<Button mnemonicParsing="false" onAction="#edit" prefHeight="25.0" prefWidth="75.0" text="Edit" GridPane.columnIndex="1" GridPane.rowIndex="3">
+            <Button mnemonicParsing="false" onAction="#edit" prefHeight="25.0" prefWidth="75.0" text="Edit" GridPane.columnIndex="1" GridPane.rowIndex="3">
                <GridPane.margin>
                   <Insets left="15.0" />
                </GridPane.margin>
-            </Button>-->
+            </Button>
             <Button mnemonicParsing="false" onAction="#clear" prefHeight="25.0" prefWidth="90.0" text="Clear" GridPane.rowIndex="3" />
             <Button mnemonicParsing="false" onAction="#add" prefHeight="25.0" prefWidth="75.0" text="Add" GridPane.columnIndex="2" GridPane.rowIndex="3">
                <GridPane.margin>
@@ -58,6 +58,7 @@
                   <Insets left="100.0" />
                </GridPane.margin>
             </Button>
+            <TextArea fx:id="textAreaContent" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
          </children>
          <HBox.margin>
             <Insets right="15.0" />

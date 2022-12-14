@@ -3,11 +3,18 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.util.converter.NumberStringConverter;
 
+import javax.swing.*;
 import javax.xml.transform.Result;
 import java.sql.*;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+import static java.util.UUID.randomUUID;
 
 public class Controller {
     Model myModel;
@@ -16,12 +23,9 @@ public class Controller {
     TextField textFieldTitle;
 
     @FXML
-    TextField textFieldContent;
-    
-    @FXML
-    ObservableList<String> noteTitles = FXCollections.observableArrayList();
+    TextArea textAreaContent;
 
-    String noteContent = new String();
+    ObservableList<Note> notes = FXCollections.observableArrayList();
 
     @FXML
     ListView<String> databaseListView = new ListView<>();
@@ -32,62 +36,98 @@ public class Controller {
         myModel = model;
 
         textFieldTitle.textProperty().bindBidirectional(model.noteTitleProperty());
-        textFieldContent.textProperty().bindBidirectional(model.noteContentProperty());
+        textAreaContent.textProperty().bindBidirectional(model.noteContentProperty());
         showItems();
 
-        databaseListView.setItems(noteTitles);
+        List<String> titlesList = notes.stream().map(Note -> Note.getTitle()).collect(Collectors.toList());
+
+        ObservableList<String> titles = FXCollections.observableArrayList(titlesList);
+
+        databaseListView.setItems(titles);
     }
 
     // sets all fields to blank
 
     public void clear() {
         textFieldTitle.setText("");
-        textFieldContent.setText("");
+        textAreaContent.setText("");
     }
 
     // once button is clicked, method calls insertFromView() from Model class and sets Text for a Label to "Check Db" and makes it Green.
 
     public void add() {
-        if (checkInputFields()){
-            myModel.insertNote();
+        if (checkInputFields()) {
+            UUID guid = randomUUID();
+            System.out.println(guid);
+            notes.add(new Note(guid, textFieldTitle.getText(), textAreaContent.getText()));
+            myModel.insertNote(guid);
             showItems();
         }
     }
 
     // checks if all textFields are empty. if false, it updates all items.
 
-    /*public void edit() {
-        if (checkInputFields()){
-            String name = textFieldName.getText();
-            String street = textFieldStreet.getText();
-            int plz = Integer.parseInt(textFieldPlz.getText());
-            String selectedName = databaseListView.getSelectionModel().getSelectedItem();
+    public void edit() {
+        if (checkInputFields()) {
+            String title = textFieldTitle.getText();
+            String content = textAreaContent.getText();
+            int id = databaseListView.getSelectionModel().getSelectedIndex();
 
+            UUID guid = notes.get(id).getGUID();
 
-             * selectedName is 1st
-             * name is second
-             * street is third
-             * plz is fourth.
+            if (verifyUUID(guid)) {
+                myModel.edit(title, content, guid);
+                showItems();
+            }
 
-
-            myModel.edit(selectedName, name, street, plz);
-
-            showItems();
         }
-    }*/
+    }
 
     public boolean checkInputFields() {
         return (!textFieldTitle.getText().isEmpty()
-                && !textFieldContent.getText().isEmpty());
+                && !textAreaContent.getText().isEmpty());
+    }
+
+    public boolean verifyUUID(UUID guid) {
+        boolean is_uuid_verified = false;
+        UUID uuid;
+        String sql = "SELECT guid FROM notes WHERE guid='" + guid + "'";
+
+        Connection myConn = connect();
+
+        try {
+            Statement stmt = myConn.createStatement();
+
+            ResultSet rs = stmt.executeQuery(sql);
+
+            String guidString = rs.getString("guid");
+            uuid = UUID.fromString(guidString);
+
+            if (uuid.equals(guid)) {
+                is_uuid_verified = true;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return is_uuid_verified;
     }
 
     /*public void delete() {
-        delete(databaseListView.getSelectionModel().getSelectedItem());
+        int id = databaseListView.getSelectionModel().getSelectedIndex();
+
+
+
+        for(Note note : notes) {
+            if(note.getGUID().equals(guid)) {
+                delete(note.getGUID());
+            }
+        }
     }*/
 
-    /*public void delete(String name) {
+    public void delete(UUID guid) {
 
-        String sql = "DELETE FROM notes WHERE name='" + name + "'";
+        String sql = "DELETE FROM notes WHERE guid='" + guid + "'";
 
         Connection myConn = connect();
 
@@ -95,61 +135,18 @@ public class Controller {
             Statement stmt = myConn.createStatement();
 
             stmt.executeQuery(sql);
-            names.remove(name);
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }*/
+    }
 
     public void showNote() {
-        textFieldContent.setText(retrieveContent(databaseListView.getSelectionModel().getSelectedIndex()+1));
-        textFieldTitle.setText(retrieveTitle(databaseListView.getSelectionModel().getSelectedIndex()+1));
-    }
-
-    public String retrieveContent(int id) {
-        String content;
-
-        String sql = "SELECT content FROM notes WHERE (noteID=?)";
-
-        try (Connection myConn = connect();
-             PreparedStatement pstmt = myConn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
-            ResultSet rs = pstmt.executeQuery();
-
-            while(rs.next()) {
-                content = rs.getString("content");
-                return content;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return "Couldn't retrieve content. Check whether which index you've selected.";
-    }
-
-    public String retrieveTitle(int id) {
-        String title;
-
-        String sql = "SELECT title FROM notes WHERE (noteID=?)";
-
-        try (Connection myConn = connect();
-             PreparedStatement pstmt = myConn.prepareStatement(sql)) {
-            pstmt.setInt(1, id);
-            ResultSet rs = pstmt.executeQuery();
-
-            while(rs.next()) {
-                title = rs.getString("title");
-                return title;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return "Couldn't retrieve title. Check which index you have selected.";
+        textAreaContent.setText(notes.get(databaseListView.getSelectionModel().getSelectedIndex()).getContent());
+        textFieldTitle.setText(notes.get(databaseListView.getSelectionModel().getSelectedIndex()).getTitle());
     }
 
     public void showItems() {
-        String sql = "SELECT title FROM notes";
+        String sql = "SELECT * FROM notes";
 
         Connection myConn = connect();
 
@@ -158,11 +155,16 @@ public class Controller {
 
             ResultSet rs = stmt.executeQuery(sql);
 
-            noteTitles.clear();
+            notes.clear();
 
             while (rs.next()) {
+                String uuidString = rs.getString("guid");
+                UUID uuid = UUID.fromString(uuidString);
+
+                String content = rs.getString("content");
                 String title = rs.getString("title");
-                noteTitles.add(title);
+
+                notes.add(new Note(uuid, title, content));
             }
         } catch (SQLException e) {
             e.printStackTrace();

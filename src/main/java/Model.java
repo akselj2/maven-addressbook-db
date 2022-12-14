@@ -3,6 +3,7 @@ import javafx.collections.ObservableList;
 import org.mindrot.jbcrypt.BCrypt;
 
 import java.sql.*;
+import java.util.UUID;
 
 /**
  * Model
@@ -75,13 +76,14 @@ public class Model {
         }
     }
 
-    public void insertNote() {
+    public void insertNote(UUID guid) {
+
 
         String title = getNoteTitle();
         String content = getNoteContent();
 
         try {
-            insert(title, content);
+            insert(title, content, guid);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -90,15 +92,13 @@ public class Model {
     public boolean verifyUser(String email, String password) {
         boolean is_user_verified = false;
 
-        String email2 = email;
-        String password2 = password;
         String sql = "SELECT password FROM users WHERE (email = ?)";
-        String hash = new String();
+        String hash = "";
 
         try (Connection myConn = this.connect();
         PreparedStatement pstmt = myConn.prepareStatement(sql)){
 
-            pstmt.setString(1, email2);
+            pstmt.setString(1, email);
 
             ResultSet rs = pstmt.executeQuery();
 
@@ -106,7 +106,7 @@ public class Model {
                 hash = rs.getString("password");
             }
 
-            if( verifyPassword(password2, hash) ) {
+            if( verifyPassword(password, hash) ) {
                 is_user_verified = true;
             }
 
@@ -137,14 +137,17 @@ public class Model {
      * @param content   String variable for firstnames
      */
 
-    public void insert(String title, String content){
+    public void insert(String title, String content, UUID guid){
 
-        String sql = "INSERT INTO notes(title, content) VALUES(?,?)";
+        System.out.println(guid);
+
+        String sql = "INSERT INTO notes(title, content, guid) VALUES(?,?,?)";
 
         try (Connection myConn = this.connect();
              PreparedStatement pstmt = myConn.prepareStatement(sql)) {
             pstmt.setString(1, title);
             pstmt.setString(2, content);
+            pstmt.setString(3, String.valueOf(guid));
             pstmt.executeUpdate();
 
         } catch(SQLException e){
@@ -152,21 +155,22 @@ public class Model {
         }
     }
 
-    /*public void edit(String selectedName, String name, String street, int plz){
-        String sql = "UPDATE users SET name = ?, street = ?, plz = ? WHERE name = ?";
+    public void edit(String title, String content, UUID uuid){
+        String sql = "UPDATE notes SET title = ?, content = ? WHERE guid = ?";
 
         try (Connection myConn = this.connect();
              PreparedStatement pstmt = myConn.prepareStatement(sql)) {
-            pstmt.setString(1, name);
-            pstmt.setString(2, street);
-            pstmt.setInt(3, plz);
-            pstmt.setString(4, selectedName);
+            pstmt.setString(1, title);
+            pstmt.setString(2, content);
+            pstmt.setString(3, uuid.toString());
             pstmt.executeUpdate();
 
         } catch(SQLException e){
             e.printStackTrace();
         }
-    }*/
+    }
+
+
 
     // connects to database with username and password
 
